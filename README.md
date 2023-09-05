@@ -239,6 +239,104 @@ total 36
 root@fhm3d67gee8do13fdsv6:/home/winkel/backup#
 ```
 
+- Что ж, посмотрим, что у нас выйдет. Дропаем базу данных, создаем снова, заливаем полный бэкап и смотрим:
+
+```
+mysql> source /home/winkel/backup/full.sql
+...
+mysql> select * from cities;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | Berlin   |
+|  2 | Paris    |
+|  3 | Valencia |
+|  4 | Tokyo    |
++----+----------+
+4 rows in set (0.00 sec)
+
+mysql> show tables;
++-----------------------+
+| Tables_in_backup_test |
++-----------------------+
+| cities                |
+| users                 |
++-----------------------+
+2 rows in set (0.01 sec)
+```
+
+- А дальше у меня начались веселые приключения :) Оказывается, нельзя просто так взять и подсунуть Percona XtraBackup фулловый бэкап, сделанный mysqldump'ом. Что ж делаем бэкап этим софтом. Я сам на это подписался:
+
+```
+root@fhm3d67gee8do13fdsv6:/home/winkel# xtrabackup --backup --target-dir=/home/winkel/backup --user=root --password=strongpassword --databases backup_test
+
+
+2023-09-05T13:24:17.024925-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized server arguments: --server-id=1 --log_bin=/var/log/mysql/mybin.log --datadir=/var/lib/mysql
+2023-09-05T13:24:17.025183-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized client arguments: --user=root --backup=1 --target-dir=/home/winkel/backup --user=root --password=* --databases=backup_test
+xtrabackup version 8.0.34-29 based on MySQL server 8.0.34 Linux (x86_64) (revision id: 5ba706ee)
+230905 13:24:17  version_check Connecting to MySQL server with DSN 'dbi:mysql:;mysql_read_default_group=xtrabackup' as 'root'  (using password: YES).
+230905 13:24:17  version_check Connected to MySQL server
+230905 13:24:17  version_check Executing a version check against the server...
+230905 13:24:17  version_check Done.
+2023-09-05T13:24:17.218141-00:00 0 [Note] [MY-011825] [Xtrabackup] Connecting to MySQL server host: localhost, user: root, password: set, port: not set, socket: not set
+2023-09-05T13:24:17.226047-00:00 0 [Note] [MY-011825] [Xtrabackup] Using server version 8.0.33
+2023-09-05T13:24:17.228989-00:00 0 [Note] [MY-011825] [Xtrabackup] Executing LOCK INSTANCE FOR BACKUP ...
+2023-09-05T13:24:17.229904-00:00 0 [Note] [MY-011825] [Xtrabackup] uses posix_fadvise().
+2023-09-05T13:24:17.229960-00:00 0 [Note] [MY-011825] [Xtrabackup] cd to /var/lib/mysql
+2023-09-05T13:24:17.229994-00:00 0 [Note] [MY-011825] [Xtrabackup] open files limit requested 0, set to 1024
+2023-09-05T13:24:17.247131-00:00 0 [Note] [MY-011825] [Xtrabackup] using the following InnoDB configuration:
+2023-09-05T13:24:17.247179-00:00 0 [Note] [MY-011825] [Xtrabackup] innodb_data_home_dir = .
+2023-09-05T13:24:17.247198-00:00 0 [Note] [MY-011825] [Xtrabackup] innodb_data_file_path = ibdata1:12M:autoextend
+2023-09-05T13:24:17.247238-00:00 0 [Note] [MY-011825] [Xtrabackup] innodb_log_group_home_dir = ./
+2023-09-05T13:24:17.247257-00:00 0 [Note] [MY-011825] [Xtrabackup] innodb_log_files_in_group = 2
+2023-09-05T13:24:17.247283-00:00 0 [Note] [MY-011825] [Xtrabackup] innodb_log_file_size = 50331648
+2023-09-05T13:24:17.249853-00:00 0 [Note] [MY-011825] [Xtrabackup] inititialize_service_handles suceeded
+2023-09-05T13:24:17.385676-00:00 0 [Note] [MY-011825] [Xtrabackup] Connecting to MySQL server host: localhost, user: root, password: set, port: not set, socket: not set
+2023-09-05T13:24:17.390944-00:00 0 [Note] [MY-011825] [Xtrabackup] Redo Log Archiving is not set up.
+2023-09-05T13:24:17.500517-00:00 0 [Note] [MY-012953] [InnoDB] Disabling background ibuf IO read threads.
+2023-09-05T13:24:17.500686-00:00 1 [Note] [MY-011825] [Xtrabackup] >> log scanned up to (19646156)
+2023-09-05T13:24:17.702926-00:00 0 [Note] [MY-011825] [Xtrabackup] Generating a list of tablespaces
+2023-09-05T13:24:17.703020-00:00 0 [Note] [MY-012204] [InnoDB] Scanning './'
+2023-09-05T13:24:17.704178-00:00 0 [Note] [MY-012208] [InnoDB] Completed space ID check of 2 files.
+2023-09-05T13:24:17.704525-00:00 0 [Warning] [MY-012091] [InnoDB] Allocated tablespace ID 4 for backup_test/cities, old maximum was 0
+****
+2023-09-05T13:24:19.943716-00:00 0 [Note] [MY-011825] [Xtrabackup] Transaction log of lsn (19646156) to (19646156) was copied.
+2023-09-05T13:24:20.152642-00:00 0 [Note] [MY-011825] [Xtrabackup] completed OK!
+```
+
+- Что ж, так как мы уже добавили новые города, давайте добавим еще людей, чтобы потом проверить инкремент:
+
+```
+mysql> INSERT INTO users(name) VALUES ("Sean Penn"),("Bob Marley"),("Elice Cooper"),("Brad Pitt");
+Query OK, 4 rows affected (0.02 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+```
+
+- Теперь попробуем сделать инкремент. Я буду использовать просто команду в строку для проверки. Потом это все можно будет также завернуть в скрипт и в кронтаб:
+
+```
+root@fhm3d67gee8do13fdsv6:/home/winkel/backup# xtrabackup --backup --target-dir=/home/winkel/incremental_backups --incremental-basedir=/home/winkel/backup --user=root --password=strongpassword! --databases backup_test
+2023-09-05T13:34:25.204004-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized server arguments: --server-id=1 --log_bin=/var/log/mysql/mybin.log --datadir=/var/lib/mysql
+2023-09-05T13:34:25.204313-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized client arguments: --user=root --backup=1 --target-dir=/home/winkel/incremental_backups --incremental-basedir=/home/winkel/backup --user=root --password=* --databases=backup_test
+xtrabackup version 8.0.34-29 based on MySQL server 8.0.34 Linux (x86_64) (revision id: 5ba706ee)
+230905 13:34:25  version_check Connecting to MySQL server with DSN 'dbi:mysql:;mysql_read_default_group=xtrabackup' as 'root'  (using password: YES).
+230905 13:34:25  version_check Connected to MySQL server
+230905 13:34:25  version_check Executing a version check against the server...
+230905 13:34:25  version_check Done.
+2023-09-05T13:34:25.282077-00:00 0 [Note] [MY-011825] [Xtrabackup] Connecting to MySQL server host: localhost, user: root, password: set, port: not set, socket: not set
+2023-09-05T13:34:25.288256-00:00 0 [Note] [MY-011825] [Xtrabackup] Using server version 8.0.33
+2023-09-05T13:34:25.291050-00:00 0 [Note] [MY-011825] [Xtrabackup] Executing LOCK INSTANCE FOR BACKUP ...
+2023-09-05T13:34:25.291706-00:00 0 [Note] [MY-011825] [Xtrabackup] incremental backup from 19646156 is enabled.
+2023-09-05T13:34:25.292045-00:00 0 [Note] [MY-011825] [Xtrabackup] uses posix_fadvise().
+2023-09-05T13:34:25.292095-00:00 0 [Note] [MY-011825] [Xtrabackup] cd to /var/lib/mysql
+2023-09-05T13:34:25.292122-00:00 0 [Note] [MY-011825] [Xtrabackup] open files limit requested 0, set to 1024
+2023-09-05T13:34:25.292553-00:00 0 [Note] [MY-011825] [Xtrabackup] using the following InnoDB configuration:
+***
+2023-09-05T13:34:29.083740-00:00 0 [Note] [MY-011825] [Xtrabackup] Transaction log of lsn (19652754) to (19652754) was copied.
+2023-09-05T13:34:29.192720-00:00 0 [Note] [MY-011825] [Xtrabackup] completed OK!
+```
+
+
 
 
 
