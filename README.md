@@ -315,7 +315,8 @@ Records: 4  Duplicates: 0  Warnings: 0
 - Теперь попробуем сделать инкремент. Я буду использовать просто команду в строку для проверки. Потом это все можно будет также завернуть в скрипт и в кронтаб:
 
 ```
-root@fhm3d67gee8do13fdsv6:/home/winkel/backup# xtrabackup --backup --target-dir=/home/winkel/incremental_backups --incremental-basedir=/home/winkel/backup --user=root --password=strongpassword! --databases backup_test
+root@fhm3d67gee8do13fdsv6:/home/winkel/backup# xtrabackup --backup --target-dir=/home/winkel/incremental_backups --incremental-basedir=/home/winkel/backup --user=root --password=strongpassword --databases backup_test
+
 2023-09-05T13:34:25.204004-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized server arguments: --server-id=1 --log_bin=/var/log/mysql/mybin.log --datadir=/var/lib/mysql
 2023-09-05T13:34:25.204313-00:00 0 [Note] [MY-011825] [Xtrabackup] recognized client arguments: --user=root --backup=1 --target-dir=/home/winkel/incremental_backups --incremental-basedir=/home/winkel/backup --user=root --password=* --databases=backup_test
 xtrabackup version 8.0.34-29 based on MySQL server 8.0.34 Linux (x86_64) (revision id: 5ba706ee)
@@ -335,6 +336,40 @@ xtrabackup version 8.0.34-29 based on MySQL server 8.0.34 Linux (x86_64) (revisi
 2023-09-05T13:34:29.083740-00:00 0 [Note] [MY-011825] [Xtrabackup] Transaction log of lsn (19652754) to (19652754) was copied.
 2023-09-05T13:34:29.192720-00:00 0 [Note] [MY-011825] [Xtrabackup] completed OK!
 ```
+
+- Алилуййййя! Что ж. Грохаем базу еще разок. И восстанавливаем фулл:
+
+```
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| backup_test        |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> drop database backup_test;
+Query OK, 2 rows affected (0.13 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.00 sec)
+```
+
+---  
+
+
 
 
 
