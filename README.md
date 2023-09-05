@@ -46,7 +46,77 @@
 
 *Приведите ответ в свободной форме.*  
 
-### Решение на примере установленного на хосте MySQL:  
+### Решение на примере установленного в доккере MySQL:   
+
+- Создадим таблицу и наполним ее несколькими таблицами:
+
+```
+mysql> create database backup_test;
+Query OK, 1 row affected (0.00 sec)
+```
+
+---  
+
+```
+mysql> CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(30));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> show tables;
++-----------------------+
+| Tables_in_backup_test |
++-----------------------+
+| users                 |
++-----------------------+
+1 row in set (0.00 sec)
+
+mysql> CREATE TABLE cities (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(30));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> show tables;
++-----------------------+
+| Tables_in_backup_test |
++-----------------------+
+| cities                |
+| users                 |
++-----------------------+
+2 rows in set (0.01 sec)
+```
+
+---  
+
+```
+mysql> INSERT INTO users(name) VALUES ("Ivan Petrov"),("Sasha Ivanov"),("Max Fry"),("Johnny Depp");
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO cities(name) VALUES ("Berlin"),("Paris"),("Valencia"),("Tokyo");
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> select * from users;
++----+--------------+
+| id | name         |
++----+--------------+
+|  1 | Ivan Petrov  |
+|  2 | Sasha Ivanov |
+|  3 | Max Fry      |
+|  4 | Johnny Depp  |
++----+--------------+
+4 rows in set (0.00 sec)
+
+mysql> select * from cities;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | Berlin   |
+|  2 | Paris    |
+|  3 | Valencia |
+|  4 | Tokyo    |
++----+----------+
+4 rows in set (0.00 sec)
+```
+
+
 
 
 
